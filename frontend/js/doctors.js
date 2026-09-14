@@ -17,11 +17,30 @@ window.editFromViewDoctor = editFromViewDoctor;
 // Initialize doctors page
 document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('doctorsTableBody')) {
+        applyDoctorRoleSecurity();
         loadDoctors();
         loadAvailableInstitutions();
         setupEventListeners();
     }
 });
+
+// Role-Based UI filtering for Doctors page
+function applyDoctorRoleSecurity() {
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const isAdmin = (currentUser.role || '').toLowerCase() === 'admin';
+    
+    // Non-admins (Doctors) cannot add new doctors (Staff Credentialing function)
+    const addDoctorBtn = document.querySelector('[data-bs-target="#doctorModal"]');
+    if (addDoctorBtn) {
+        addDoctorBtn.style.display = isAdmin ? '' : 'none';
+    }
+    
+    // Update Page Header for clinical users
+    const headerTitle = document.querySelector('h1');
+    if (headerTitle && !isAdmin) {
+        headerTitle.innerHTML = '<i class="bi bi-person-badge"></i> Physician & Specialist Directory';
+    }
+}
 
 // Setup event listeners
 function setupEventListeners() {
@@ -149,6 +168,8 @@ function populateSpecialtyFilter() {
 
 // Display doctors in table
 function displayDoctors() {
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const isAdmin = (currentUser.role || '').toLowerCase() === 'admin';
     const tbody = document.getElementById('doctorsTableBody');
     const tableDiv = document.getElementById('doctorsTable');
     const noDoctors = document.getElementById('noDoctors');
@@ -189,17 +210,23 @@ function displayDoctors() {
                     <small class="text-muted">${institutionNames}</small>
                 </td>
                 <td>
-                    <div class="btn-group btn-group-sm" role="group">
-                        <button class="btn btn-outline-primary" onclick="editDoctor('${doctor.id}')" title="Edit">
-                            <i class="bi bi-pencil"></i>
+                    ${isAdmin ? `
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button class="btn btn-outline-primary" onclick="editDoctor('${doctor.id}')" title="Edit Doctor">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-outline-info" onclick="viewDoctor('${doctor.id}')" title="View Details">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="deleteDoctor('${doctor.id}', 'Dr. ${doctor.first_name} ${doctor.last_name}')" title="Delete Doctor">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    ` : `
+                        <button class="btn btn-outline-info btn-sm" onclick="viewDoctor('${doctor.id}')" title="View Specialist Profile & Referral Info">
+                            <i class="bi bi-eye me-1"></i>View Profile
                         </button>
-                        <button class="btn btn-outline-info" onclick="viewDoctor('${doctor.id}')" title="View Details">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                        <button class="btn btn-outline-danger" onclick="deleteDoctor('${doctor.id}', 'Dr. ${doctor.first_name} ${doctor.last_name}')" title="Delete">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
+                    `}
                 </td>
             </tr>
         `;

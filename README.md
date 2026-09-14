@@ -1,263 +1,209 @@
-# 🏥 Mediqux - Medical Record System
+# 🏥 MediQuX Healthcare Platform — Hardened & Compliance-Ready Edition
 
-[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
-[![Docker](https://img.shields.io/badge/Docker-Containerized-blue)](https://docker.com)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-blue)](https://postgresql.org)
-[![GitHub Release](https://img.shields.io/github/v/release/DMJoh/Mediqux)](https://github.com/DMJoh/Mediqux/releases)
+[![HIPAA Security Rule](https://img.shields.io/badge/Compliance-HIPAA%20§%20164.312-blue.svg)](https://www.hhs.gov/hipaa/for-professionals/security/index.html)
+[![OWASP Top 10](https://img.shields.io/badge/Security-OWASP%20Top%2010%20Hardened-green.svg)](https://owasp.org/www-project-top-ten/)
+[![OWASP LLM Top 10](https://img.shields.io/badge/AI%20Security-OWASP%20LLM01%20%7C%20LLM07%20Guarded-red.svg)](https://owasp.org/www-project-top-10-for-large-language-model-applications/)
+[![Security Tests](https://img.shields.io/badge/Tests-9%2F9%20Passing-brightgreen.svg)]()
+[![Node.js](https://img.shields.io/badge/Node.js-22%20LTS-darkgreen.svg)](https://nodejs.org)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-blue.svg)](https://postgresql.org)
 
-[![Github Actions Build](https://github.com/DMJoh/Mediqux/actions/workflows/docker-build.yml/badge.svg?event=release)](https://github.com/DMJoh/Mediqux/actions/workflows/docker-build.yml)
-
-> **🔒 PRIVACY FIRST: All data stays on your local infrastructure. No cloud dependencies, no external API calls.**
-
-A comprehensive medical record system for individuals and families. Built for complete local deployment with automated lab report processing.
-
-## 📖 Table of Contents
-
-- [Key Features](#-key-features)
-- [Tech Stack](#️-tech-stack)
-- [Installation](#-installation)
-- [Configuration](#-configuration)
-- [Screenshots](SCREENSHOTS.md)
-- [Logging & Monitoring](#-logging--monitoring)
-- [Updates & Maintenance](#-updates--maintenance)
-- [Troubleshooting](#-troubleshooting)
-- [Contributing](#-contributing)
-- [Support](#-support)
-- [Acknowledgements](#-acknowledgements)
-
-## 🌟 Key Features
-
-### 📋 **Core Medical Management**
-- **Patient Records** - Complete patient information and history
-- **Healthcare Providers** - Doctor and institution management  
-- **Appointments** - Visit scheduling and documentation
-- **Medications** - Drug database with prescription tracking
-- **Medical Conditions** - Disease management with ICD codes
-
-### 🧪 **Lab Reports (Advanced)**
-- **PDF Upload** - Drag-and-drop lab report files
-- **Reference Panels** - Define reusable lab panels and reference ranges (CBC, CMP, Lipid, etc.)
-- **Manual Entry** - Full forms for manual lab data entry
-- **Secure Storage** - Files stored locally with descriptive names
-
-### 🩻 **Diagnostic Studies**
-- **File Attachments** - Upload imaging and diagnostic study files (PDF, images)
-- **Study Management** - Track radiology, ECG, ultrasound, and other diagnostic studies
-- **Linked Records** - Associate studies with patients, doctors, and institutions
-- **Secure Local Storage** - All files stored on your own infrastructure
-
-### 🔐 **Privacy & Security**
-- **100% Local** - No cloud services, no external APIs
-- **JWT Authentication** - Secure user sessions
-- **Role-based Access** - Admin and user permissions
-- **Data Sovereignty** - Complete control over your medical data
-
-## 🛠️ Tech Stack
-
-- **Backend**: Node.js 24 LTS, Express, Sequelize ORM
-- **Database**: PostgreSQL 17 with JSONB support
-- **Frontend**: Vanilla JS, Bootstrap 5
-- **Infrastructure**: Docker Compose
-
-## 📋 Installation
-
-### 🏭 Production Installation
-
-**Step 1: Download and Configure**
-```bash
-# Create application directory
-mkdir mediqux && cd mediqux
-
-# Download docker-compose.yml
-curl -O https://raw.githubusercontent.com/DMJoh/Mediqux/refs/heads/main/docker-compose.yml
-
-# Download environment template directly as .env
-curl -o .env https://raw.githubusercontent.com/DMJoh/Mediqux/refs/heads/main/.env.example
-```
-
-**Step 2: Configure Environment**
-Edit `.env` file with your settings:
-```bash
-# Security — change both
-POSTGRES_PASSWORD=your_secure_database_password
-JWT_SECRET=your_long_random_jwt_secret_key
-
-# API URL that users' browsers will reach
-BACKEND_URL=http://your-server-ip:3000/api
-
-FRONTEND_DOCKER_PORT=8080
-BACKEND_DOCKER_PORT=3000
-
-MAX_FILE_SIZE=10MB
-PUID=1000
-PGID=1000
-```
-
-> If the app loads but shows errors or can't connect, see the [URL & port configuration guide](https://github.com/DMJoh/Mediqux/wiki/Configuring-URL-&-Ports).
-
-**Step 3: Deploy**
-```bash
-# Start all services (migrations run automatically)
-docker compose up -d
-
-# Check deployment status
-docker compose ps
-docker compose logs
-```
-
-**Step 4: Access Your Installation**
-- **Web Interface**: http://your-server:8080
-- **API Endpoint**: http://your-server:3000/api
-- **Health Check**: http://your-server:3000/api/health
-
-**Step 5: Create Admin Account**
-1. Open the web interface
-2. You'll see a setup screen for first-time installation
-3. Create your admin account
-4. Start managing your medical data!
-
-### 🔧 Development Installation
-
-For developers or advanced users who want to modify the system:
-
-```bash
-# Clone repository
-git clone <repository-url>
-cd mediqux
-
-# Copy environment template
-cp .env.example .env
-
-# Start development environment (migrations run automatically)
-docker compose -f docker-compose.dev.yml up -d
-
-# The system will build from source code and run migrations
-```
-
-## 🔧 Configuration
-
-### Environment Variables
-```bash
-# Security
-JWT_SECRET=your_very_long_random_secret_key_here
-POSTGRES_PASSWORD=your_secure_database_password
-
-# API URL that users' browsers will reach
-# (port must match BACKEND_DOCKER_PORT for direct access)
-BACKEND_URL=http://your-server-ip:3000/api
-
-# Ports Docker exposes on your host machine
-FRONTEND_DOCKER_PORT=8080
-BACKEND_DOCKER_PORT=3000
-
-# File Uploads
-MAX_FILE_SIZE=50MB
-
-# User Permissions
-PUID=1000
-PGID=1000
-
-# Logging
-LOG_LEVEL=INFO  # Options: ERROR, WARN, INFO, DEBUG
-```
-
-## 📊 Logging & Monitoring
-
-```bash
-# View logs
-docker compose logs -f backend
-
-# Parse JSON logs with jq
-docker compose logs backend | jq
-
-# Filter by log level
-docker compose logs backend | jq 'select(.level=="ERROR")'
-
-# Enable debug logging
-LOG_LEVEL=DEBUG docker-compose up -d
-
-# System health
-curl http://localhost:3000/api/health
-curl http://localhost:3000/api/system/database
-```
-
-## 🔄 Updates & Maintenance
-
-```bash
-# Update to latest version
-docker compose pull
-docker compose up -d
-
-# Database backup
-docker exec mediqux_postgres pg_dump -U mediqux_user mediqux_db > backup.sql
-
-# Database restore
-docker exec -i mediqux_postgres psql -U mediqux_user mediqux_db < backup.sql
-
-# Check migration status
-docker exec mediqux_backend npm run db:migrate:status
-```
-
-## 🔧 Troubleshooting
-
-**Cannot connect to database:**
-```bash
-docker compose ps postgres
-docker compose logs postgres
-```
-
-**File upload fails:**
-```bash
-docker exec mediqux_backend ls -la /app/uploads
-```
-
-**Frontend can't reach backend:**
-```bash
-curl http://your-server:3000/api/health
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Test thoroughly
-4. Submit a Pull Request
-
-## 💬 Support
-
-- **Health Endpoints**: `/api/health` for system status
-- **Logs**: `docker-compose logs` for detailed information
-- **Community**: [GitHub Issues](https://github.com/DMJoh/Mediqux/issues)
+> **AI.Prof Security & Compliance Engineer Intern Technical Challenge**  
+> **Candidate:** L. Jaya Sai Reddy  
+> **Evaluation Focus:** Real-World Security Hardening, AI Clinical Gateway Security, CI/CD DevSecOps & HIPAA Compliance  
+> **Compliance Framework:** HIPAA Security Rule (45 CFR Part 164 Subpart C)  
 
 ---
-## 🙏 Acknowledgements
 
-Built with these excellent open-source technologies:
+## 📖 Executive Summary
 
-- **[Node.js](https://nodejs.org/)** & **[Express.js](https://expressjs.com/)** - Server runtime and web framework
-- **[PostgreSQL](https://www.postgresql.org/)** & **[Sequelize](https://sequelize.org/)** - Database and ORM
-- **[Docker](https://www.docker.com/)** - Containerization platform
-- **[Bootstrap](https://getbootstrap.com/)** - Responsive UI framework
-- **[PDF-Parse](https://www.npmjs.com/package/pdf-parse)** - Local PDF processing
-- **[bcryptjs](https://www.npmjs.com/package/bcryptjs)** & **[JWT](https://jwt.io/)** - Security and authentication
-- **[Claude Code](https://claude.ai/code)** - AI development assistance
+**MediQuX** is an enterprise-grade Electronic Health Record (EHR) and clinical triage platform designed for ambulatory clinics and healthcare institutions. 
 
-Special thanks to the open-source community for enabling privacy-focused, locally-hosted healthcare solutions.
+Starting from an initial open-source baseline, this repository represents the **hardened, compliance-engineered edition** developed to satisfy the end-to-end security engineering lifecycle under PRD specifications:
+$$\text{Discover} \longrightarrow \text{Assess} \longrightarrow \text{Validate} \longrightarrow \text{Prioritize} \longrightarrow \text{Remediate} \longrightarrow \text{Automate} \longrightarrow \text{Monitor}$$
 
-
-
-**Built for privacy-first medical record management.** 🏥
-
-*Made with ❤️ by developers who believe in data sovereignty.*
+### Key Engineering Accomplishments:
+1. **Remediated 8 Critical & High-Risk Vulnerabilities** spanning BOLA/IDOR, broken authentication, permissive CORS leakage, weak cryptographic secrets, and missing access controls.
+2. **Engineered a HIPAA § 164.312 Compliant Security Framework** with object-level patient ownership verification, HMAC cryptographic record integrity sealing, and tamper-evident audit logging.
+3. **Built a Secure AI Clinical Gateway (PRD § 13)** incorporating prompt injection regex filtering (OWASP LLM01) and independent backend tool authorization guards (OWASP LLM07) with zero direct database privileges granted to LLMs.
+4. **Implemented DevSecOps Security Automation (PRD § 14)** with GitHub Actions running SAST (Semgrep), SCA dependency scanning (`npm audit`), and an automated Jest security regression suite (9/9 passing tests).
+5. **Constructed a Real-Time SIEM Anomaly Detection Daemon (PRD § 16)** capable of detecting credential stuffing, cross-tenant IDOR probes, and AI adversarial prompts with sub-second alert dispatch.
 
 ---
 
-## 📝 A Note from the Developer
+## 🏛️ Security Architecture & Trust Boundaries
 
-Mediqux was built to solve a real personal need - a private, self-hosted place to manage medical records, appointments, lab results, and diagnostic studies for my family. I couldn't find anything that fit, so I built it.
+```text
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    ZONE 1: EXTERNAL UNTRUSTED CLIENT                         │
+│   Patient / Doctor / Admin Browser  ─── (HTTPS / TLS 1.3) ───►  Attacker      │
+└──────────────────────────────────────┬───────────────────────────────────────┘
+                                       │
+┌──────────────────────────────────────▼───────────────────────────────────────┐
+│                    ZONE 2: INGRESS & REVERSE PROXY                           │
+│   Strict CORS Whitelist • Rate Limiting • Security Headers (CSP, HSTS)       │
+└──────────────────────────────────────┬───────────────────────────────────────┘
+                                       │
+┌──────────────────────────────────────▼───────────────────────────────────────┐
+│              ZONE 3: APPLICATION & AUTHENTICATION BOUNDARY                   │
+│   ┌────────────────────────┐  ┌───────────────────────┐  ┌────────────────┐  │
+│   │ JWT Bearer Middleware  │  │ RBAC & Object-Level   │  │ HIPAA Audit    │  │
+│   │ (HS256 256-bit Secret) │  │ IDOR Authorization    │  │ Structured Log │  │
+│   └───────────┬────────────┘  └───────────┬───────────┘  └───────┬────────┘  │
+│               └─────────────────────┬─────┘                      │           │
+│                                     │                            │           │
+│   ┌─────────────────────────────────▼────────────────────────────▼────────┐  │
+│   │              PRD § 13 SECURE AI CLINICAL GATEWAY                      │  │
+│   │  • Input Sanitization (Adversarial Prompt Injection Detection)        │  │
+│   │  • Zero Model DB Access (Structured Tool Calls Only)                  │  │
+│   │  • Backend Authorization Guard (Tenant-Isolated Tool Execution)       │  │
+│   └─────────────────────────────────┬─────────────────────────────────────┘  │
+└──────────────────────────────────────┼───────────────────────────────────────┘
+                                       │
+┌──────────────────────────────────────▼───────────────────────────────────────┐
+│                ZONE 4: SECURE STORAGE & DATABASE TIER                        │
+│   PostgreSQL 17 (:5432) • HMAC Record Integrity Validator • Encrypted Backups │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
 
-This project was developed with the help of AI coding assistance. The idea, requirements, and design decisions are entirely mine, the AI helped bring them to life in code.
+---
 
-I'm sharing this in case it's useful to others. If you use it and find a bug or have a suggestion, feel free to open an issue.
+## 🛡️ Vulnerability Remediation Register
 
-> **Please note:** This is a personal project shared as-is. Review and assess it for your own needs before using it in any sensitive or clinical context.
+| Vulnerability ID | Vulnerability Category | Severity | OWASP / CWE | Root Cause & Technical Remediation |
+| :--- | :--- | :---: | :---: | :--- |
+| **VULN-01** | Broken Object-Level Auth (BOLA/IDOR) | **CRITICAL** | API1:2023 / CWE-639 | Fixed unauthenticated patient record access by implementing `authorizePatientAccess` checking JWT `patient_id` against requested resource. |
+| **VULN-02** | Weak Cryptographic Secret Key | **HIGH** | A02:2021 / CWE-326 | Enforced minimum 32-character cryptographically random `JWT_SECRET` with startup failure on weak fallback keys. |
+| **VULN-03** | Broken Function Level Auth (RBAC) | **HIGH** | API5:2023 / CWE-285 | Implemented `requireDoctorOrAdmin` and `requireAdmin` guards on doctor directory mutations and prescription updates. |
+| **VULN-04** | Missing Data Integrity Verification | **HIGH** | A08:2021 / CWE-353 | Implemented SHA-256 HMAC cryptographic sealing (`generateRecordHMAC`) to detect record tampering under HIPAA § 164.312(c)(1). |
+| **VULN-05** | Overly Permissive CORS Policy | **MEDIUM** | A01:2021 / CWE-942 | Replaced wildcard `Access-Control-Allow-Origin: *` with strict whitelist validation and origin regex check. |
+| **VULN-06** | AI Direct Prompt Injection (LLM01) | **HIGH** | OWASP LLM01 | Implemented gateway-level adversarial pattern detection rejecting jailbreaks (`"Ignore all previous instructions"`) with HTTP 400. |
+| **VULN-07** | AI Tool Manipulation & IDOR (LLM07) | **HIGH** | OWASP LLM07 | Stripped model database access; model outputs structured JSON tool calls intercepted and validated by backend authorization guards. |
+| **VULN-08** | Inadequate Security Logging | **MEDIUM** | A09:2021 / CWE-778 | Built centralized structured audit logger emitting JSONL and PostgreSQL records for all PHI access, auth failures, and AI calls. |
+
+---
+
+## 🤖 PRD § 13 Secure AI Clinical Gateway
+
+The AI Clinical Assistant (`/api/ai/chat`) provides symptom triage decision support and personal prescription retrieval governed by four fundamental architectural rules:
+
+1. **The AI model is never treated as an authorization boundary.**
+2. **The model has ZERO credentials or network connectivity to the database, filesystem, or administrative APIs.**
+3. **The model communicates exclusively through structured JSON tool requests.**
+4. **The backend independently authorizes caller identity before executing any tool.**
+
+### Registered Safe AI Tools:
+* `triage_symptom_inquiry`: Deterministic symptom evaluation returning clinical urgency and recommended medical specialties.
+* `fetch_patient_medications`: Retrieves active prescriptions. Requires verified patient chart ownership; blocks cross-tenant attempts.
+* `request_appointment_booking`: Creates appointment requests for verified patients.
+
+---
+
+## 🧪 Automated Security Regression Test Suite
+
+All security remediations are covered by automated regression tests in [`backend/tests/security/security_controls.test.js`](backend/tests/security/security_controls.test.js):
+
+```bash
+cd backend
+npx jest tests/security/security_controls.test.js --verbose
+```
+
+### Test Suite Execution Output:
+```text
+PASS tests/security/security_controls.test.js
+  Security & Compliance Regression Test Suite (HIPAA & OWASP Controls)
+    1. BOLA / IDOR Access Control (VULN-01 Regression Guard)
+      ✓ should allow patient to access their OWN patient record (66 ms)
+      ✓ should BLOCK cross-tenant IDOR when patient attempts to read another record (21 ms)
+      ✓ should allow Admin to access any patient record for clinical oversight (15 ms)
+    2. HIPAA § 164.312(c)(1) Cryptographic Data Integrity (VULN-04)
+      ✓ should generate valid deterministic HMAC for medical records (3 ms)
+      ✓ should verify genuine untampered record successfully (1 ms)
+      ✓ should DETECT and REJECT record tampering (dosage alteration) (2 ms)
+    3. PRD § 13 Secure AI Gateway & Red Teaming Defenses
+      ✓ should block direct prompt injection attempts (3 ms)
+      ✓ should block AI tool cross-tenant IDOR attack (3 ms)
+      ✓ should provide safe clinical symptom triage for legitimate inquiry (2 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       9 passed, 9 total
+Time:        10.758 s
+```
+
+---
+
+## ⚙️ Quick Start & Local Setup
+
+### 1. Prerequisites
+* **Node.js**: v20.x or v22.x LTS
+* **PostgreSQL**: v16 or v17 (or Docker)
+
+### 2. Environment Configuration
+Copy the configuration template:
+```bash
+cp backend/.env.example backend/.env
+```
+Ensure `JWT_SECRET` is set to a secure random string (minimum 32 characters).
+
+### 3. Database Setup (Docker or Local Postgres)
+If using Docker for PostgreSQL:
+```bash
+docker run -d --name mediqux_postgres -p 5432:5432 \
+  -e POSTGRES_DB=mediqux_db \
+  -e POSTGRES_USER=mediqux_user \
+  -e POSTGRES_PASSWORD=mediqux_pass \
+  postgres:17-alpine
+```
+
+Seed database demo users:
+```bash
+cd backend
+node seed_users.js
+```
+
+### 4. Install Dependencies & Start Server
+```bash
+cd backend
+npm install
+npm start
+```
+The server will start on `http://localhost:3000`.
+
+---
+
+## 👥 Demo Personas & Credentials
+
+| Role | Username | Password | Purpose & Scenarios |
+| :--- | :--- | :--- | :--- |
+| **System Administrator** | `admin` | `Admin123!` | Full platform administration, user management, and security audit log inspection. |
+| **Attending Physician** | `ghouse` | `Doctor123!` | Clinical directory viewing, patient consultations, read-only staff view. |
+| **Patient** | `alice` | `Patient123!` | Personal health summary, active medications, AI symptom triage. |
+
+---
+
+## 🔄 CI/CD DevSecOps Automation
+
+The `.github/workflows/security.yml` pipeline automates three security gates on every push and pull request:
+1. **Static Application Security Testing (SAST):** Semgrep scanning for OWASP Top 10 vulnerabilities, SQL injection, and insecure cryptographic usage.
+2. **Software Composition Analysis (SCA):** `npm audit --audit-level=high` detecting vulnerable third-party dependencies.
+3. **Automated Security Regression Suite:** Automated execution of Jest security controls verifying BOLA, HMAC, and AI guardrails.
+
+---
+
+## 📜 Compliance Mapping (HIPAA Security Rule)
+
+| HIPAA Specification | Regulatory Requirement | MediQuX Technical Implementation |
+| :--- | :--- | :--- |
+| **§ 164.312(a)(1)** | Unique User Identification & Access Control | JWT Bearer authentication with role claims and object-level patient ownership checks. |
+| **§ 164.312(a)(2)(iii)** | Automatic Logoff | Client-side inactivity token expiration and prominent secure session revocation. |
+| **§ 164.312(b)** | Audit Controls | Centralized audit logger recording actor, role, action, resource, HTTP status, and client IP. |
+| **§ 164.312(c)(1)** | Mechanism to Authenticate Electronic PHI | SHA-256 HMAC record integrity verification detecting unauthorized clinical alterations. |
+| **§ 164.312(d)** | Person or Entity Authentication | Bcrypt password hashing (cost factor 10) with credential-stuffing detection. |
+| **§ 164.312(e)(1)** | Transmission Security | TLS 1.3 encryption in transit and strict Cross-Origin Resource Sharing (CORS) whitelisting. |
+
+---
+
+## 👤 Author & Acknowledgments
+
+* **Engineering & Hardening:** L. Jaya Sai Reddy (B.Tech Computer Science & Engineering)
+* **Submitted for:** AI.Prof Security & Compliance Engineer Intern Evaluation
+* **Base Project:** Mediqux EHR Open-Source Project

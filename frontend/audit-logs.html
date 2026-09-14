@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Audit Logs - Mediqux</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIGZpbGw9IiMwZDZlZmQiIHJ4PSI0Ii8+CiAgPHBhdGggZD0iTTE2IDI0Yy0yIDAtOC00LTgtMTAgMC0zIDIuNS01IDUtNSAxLjUgMCAyLjUgMC41IDMgMS41IDAuNS0xIDEuNS0xLjUgMy0xLjUgMi41IDAgNSAyIDUgNSAwIDYtNiAxMC04IDEweiIgZmlsbD0id2hpdGUiLz4KICA8cGF0aCBkPSJNOCAxNmgzbDItNCAyIDggMi00aDMiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMS41IiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link href="css/styles.css" rel="stylesheet">
+    
+    <!-- Theme Management -->
+    <script src="js/theme.js"></script>
+    <style>
+        .badge-denied { background-color: #dc3545; color: #fff; font-weight: 600; }
+        .badge-success-audit { background-color: #198754; color: #fff; font-weight: 600; }
+        .badge-ai-sec { background-color: #fd7e14; color: #fff; font-weight: 600; }
+        .badge-phi { background-color: #6f42c1; color: #fff; font-weight: 600; }
+        .table-hover tbody tr:hover { background-color: rgba(13, 110, 253, 0.05); }
+        .font-monospace-sm { font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="index.html"><i class="bi bi-heart-pulse"></i> Mediqux</a>
+            
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="patients.html">Patients</a>
+                <a class="nav-link" href="institutions.html">Institutions</a>
+                <a class="nav-link" href="doctors.html">Doctors</a>
+                <a class="nav-link" href="appointments.html">Appointments</a>
+                <a class="nav-link" href="conditions.html">Conditions</a>
+                <a class="nav-link" href="medications.html">Medications</a>
+                <a class="nav-link" href="prescriptions.html">Prescriptions</a>
+                <a class="nav-link" href="ai-assistant.html"><i class="bi bi-robot text-primary me-1"></i>AI Assistant</a>
+                
+                <!-- Records Dropdown -->
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Records</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="lab-reports.html"><i class="bi bi-file-earmark-medical me-2"></i>Lab Reports</a></li>
+                        <li><a class="dropdown-item" href="diagnostic-studies.html"><i class="bi bi-body-text me-2"></i>Diagnostic Studies</a></li>
+                    </ul>
+                </div>
+                
+                <!-- User Menu -->
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle me-1"></i>
+                        <span class="user-name">Admin</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><h6 class="dropdown-header">
+                            <span class="user-name">Admin</span><br>
+                            <small class="text-muted user-role">System Administrator</small>
+                        </h6></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header text-uppercase small fw-bold text-muted">Settings</h6></li>
+                        <li><a class="dropdown-item admin-only" href="users.html">
+                            <i class="bi bi-people me-2"></i>User Management
+                        </a></li>
+                        <li><a class="dropdown-item admin-only active" href="audit-logs.html">
+                            <i class="bi bi-shield-check me-2"></i>Security Audit Logs
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item logout-btn" href="#">
+                            <i class="bi bi-box-arrow-right me-2"></i>Logout
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid px-4 mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h2 mb-1"><i class="bi bi-shield-lock text-primary me-2"></i>Security Audit Trail & SIEM Monitor</h1>
+                <p class="text-muted mb-0">HIPAA Security Rule § 164.312(b) Immutable Clinical Activity & Non-Repudiation Log</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary" id="refreshAuditBtn">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Refresh Log Stream
+                </button>
+            </div>
+        </div>
+
+        <!-- Metric KPI Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 border-start border-primary border-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted text-uppercase mb-1 small fw-bold">Total Audit Events</h6>
+                                <h3 class="mb-0 fw-bold" id="metricTotalEvents">0</h3>
+                            </div>
+                            <i class="bi bi-file-earmark-text text-primary fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 border-start border-danger border-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted text-uppercase mb-1 small fw-bold">Blocked Violations (Denied)</h6>
+                                <h3 class="mb-0 fw-bold text-danger" id="metricDeniedEvents">0</h3>
+                            </div>
+                            <i class="bi bi-shield-slash text-danger fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 border-start border-warning border-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted text-uppercase mb-1 small fw-bold">AI Guardrail Interventions</h6>
+                                <h3 class="mb-0 fw-bold text-warning" id="metricAiViolations">0</h3>
+                            </div>
+                            <i class="bi bi-robot text-warning fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 border-start border-success border-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted text-uppercase mb-1 small fw-bold">ePHI Access Audits</h6>
+                                <h3 class="mb-0 fw-bold text-success" id="metricPhiEvents">0</h3>
+                            </div>
+                            <i class="bi bi-hospital text-success fs-1"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter & Search Bar -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control" id="auditSearchInput" placeholder="Search by username, action, IP, or resource ID...">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="auditStatusFilter">
+                            <option value="ALL">All Outcomes (Success & Denied)</option>
+                            <option value="DENIED">Violations Only (DENIED / Blocked)</option>
+                            <option value="SUCCESS">Authorized Only (SUCCESS)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="auditActionFilter">
+                            <option value="">All Security Event Types</option>
+                            <option value="AI_PROMPT_INJECTION">AI Prompt Injection (Jailbreak)</option>
+                            <option value="AI_TOOL_IDOR">AI Tool IDOR Bypass Attempt</option>
+                            <option value="AUTHENTICATION">Authentication / Login Events</option>
+                            <option value="ACCESS_PATIENT_PHI">PHI Access & Retrieval</option>
+                            <option value="CREATE_PRESCRIPTION">Prescription Modifications</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" id="auditLimitSelect">
+                            <option value="50">Show 50 rows</option>
+                            <option value="100" selected>Show 100 rows</option>
+                            <option value="250">Show 250 rows</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Log Table -->
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="auditLogsTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 17%;">Timestamp (UTC)</th>
+                                <th style="width: 14%;">Actor</th>
+                                <th style="width: 25%;">Action Event</th>
+                                <th style="width: 14%;">Resource Type</th>
+                                <th style="width: 10%;">HTTP Status</th>
+                                <th style="width: 10%;">Outcome</th>
+                                <th style="width: 10%; text-align: center;">Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    <div class="spinner-border spinner-border-sm me-2 text-primary"></div>
+                                    Querying PostgreSQL audit_logs table...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer bg-white d-flex justify-content-between align-items-center py-2">
+                <small class="text-muted" id="auditRecordCountDisplay">Showing 0 records</small>
+                <small class="text-muted"><i class="bi bi-lock-fill text-success me-1"></i>Immutable PostgreSQL Table: mediqux_db.public.audit_logs</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forensic Record Detail Modal -->
+    <div class="modal fade" id="auditDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title"><i class="bi bi-file-earmark-code me-2"></i>Forensic Audit Record</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <pre class="bg-dark text-light p-3 rounded font-monospace-sm" id="auditModalJson" style="max-height: 400px; overflow-y: auto;"></pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/audit-logs.js"></script>
+</body>
+</html>

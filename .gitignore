@@ -1,42 +1,47 @@
-# macOS settings file 
+# ==============================================================================
+# MediQuX Git Ignore Configuration (HIPAA Hardened Edition)
+# ==============================================================================
+
+# OS & Editor files
 .DS_Store
+Thumbs.db
+.vscode/
+.idea/
 
-# Contains all your dependencies
-node_modules
+# Dependencies
+node_modules/
+backend/node_modules/
 
-# Replace as required with your build location
-/build
-
-# Deal with environment files
+# Environment & Secrets (NEVER commit secrets under PRD § 24)
 .env
 .env.*
-
-# We'll allow an example .env file which can be copied
+backend/.env
+backend/.env.*
 !.env.example
+!backend/.env.example
 
-# Coverage directory used by testing tools
-coverage
-
-# Visual Studio Code configuration
-.vscode/
-
-
-# npm and yarn debug logs
+# Runtime Logs & Audits
+*.log
+*.jsonl
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+logs/
+backend/logs/*
+!backend/logs/.gitkeep
 
-# next.js
-.next
+# Uploads & User Generated PHI files
+uploads/*
+backend/uploads/*
+!backend/uploads/.gitkeep
 
-# sveltekit
-/.svelte-kit
+# Build & Test artifacts
+/build
+coverage/
+.next/
+.svelte-kit/
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# App specific
-CLAUDE.md
-uploads
-
-# Generated at container runtime by frontend/docker-entrypoint.sh
+# Runtime Generated Configs
 frontend/js/runtime-config.js

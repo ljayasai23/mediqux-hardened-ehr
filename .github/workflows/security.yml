@@ -1,0 +1,93 @@
+name: Healthcare Platform Security Pipeline & HIPAA Verification
+
+on:
+  push:
+    branches: [ main, master, security-hardening, develop ]
+  pull_request:
+    branches: [ main, master ]
+  schedule:
+    # Nightly security scan
+    - cron: '0 2 * * *'
+
+jobs:
+  # Check 1: Secret Scanning (PRD Section 14 - Detects hardcoded keys & secrets)
+  secret-scan:
+    name: Secret & Credential Scanning (TruffleHog)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run TruffleHog Secret Scanner
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug --only-verified
+
+  # Check 2: Static Application Security Testing (SAST) - Semgrep OWASP Top 10
+  sast-scan:
+    name: SAST Scan (Semgrep OWASP Top 10)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep Security Rules
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/owasp-top-10
+            p/javascript
+            p/security-audit
+            p/secrets
+          generateSarif: "1"
+
+  # Check 3: Software Composition Analysis (SCA) - Dependency Vulnerabilities
+  dependency-audit:
+    name: SCA Dependency Audit (npm audit)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: 'backend/package-lock.json'
+
+      - name: Audit Production Dependencies
+        working-directory: ./backend
+        run: |
+          npm audit --audit-level=critical --omit=dev
+
+  # Check 4: Automated Security Regression Tests (BOLA/IDOR, HMAC, AI Guardrails)
+  security-regression-tests:
+    name: Security & HIPAA Regression Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Execute Security Regression Test Suite
+        working-directory: ./backend
+        env:
+          JWT_SECRET: "ci-cd-high-entropy-test-signing-key-999999999999"
+          INTEGRITY_SECRET: "ci-cd-hipaa-hmac-data-integrity-key-888888888"
+          NODE_ENV: "test"
+        run: |
+          npx jest tests/security/security_controls.test.js --ci --verbose

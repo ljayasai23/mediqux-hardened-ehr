@@ -154,6 +154,10 @@ function displayPrescriptions() {
                 statusBadge = '<span class="badge bg-info">Unknown</span>';
         }
         
+        // Check role permissions: only doctors and admins can edit or delete prescriptions
+        const currentUser = (window.authManager && window.authManager.user) || JSON.parse(localStorage.getItem('user') || 'null');
+        const canModify = currentUser && (currentUser.role === 'doctor' || currentUser.role === 'admin');
+        
         return `
             <tr>
                 <td>
@@ -188,15 +192,19 @@ function displayPrescriptions() {
                 </td>
                 <td>
                     <div class="btn-group btn-group-sm" role="group">
+                        ${canModify ? `
                         <button class="btn btn-outline-primary" onclick="editPrescription('${prescription.id}')" title="Edit">
                             <i class="bi bi-pencil"></i>
                         </button>
+                        ` : ''}
                         <button class="btn btn-outline-info" onclick="viewPrescription('${prescription.id}')" title="View Details">
                             <i class="bi bi-eye"></i>
                         </button>
+                        ${canModify ? `
                         <button class="btn btn-outline-danger" onclick="deletePrescription('${prescription.id}', '${prescription.patient_first_name} ${prescription.patient_last_name}', '${prescription.medication_name}')" title="Delete">
                             <i class="bi bi-trash"></i>
                         </button>
+                        ` : ''}
                     </div>
                 </td>
             </tr>
@@ -484,11 +492,18 @@ async function viewPrescription(id) {
             const prescription = response.data;
             displayPrescriptionDetails(prescription);
             
-            // Setup edit button in details modal
-            document.getElementById('editPrescriptionFromDetailsBtn').onclick = () => {
-                bootstrap.Modal.getInstance(document.getElementById('prescriptionDetailsModal')).hide();
-                setTimeout(() => editPrescription(id), 300); // Small delay for smooth transition
-            };
+            // Setup edit button in details modal (only for doctors and admins)
+            const editDetailsBtn = document.getElementById('editPrescriptionFromDetailsBtn');
+            const currentUser = (window.authManager && window.authManager.user) || JSON.parse(localStorage.getItem('user') || 'null');
+            const canModify = currentUser && (currentUser.role === 'doctor' || currentUser.role === 'admin');
+            
+            if (editDetailsBtn) {
+                editDetailsBtn.style.display = canModify ? 'inline-block' : 'none';
+                editDetailsBtn.onclick = () => {
+                    bootstrap.Modal.getInstance(document.getElementById('prescriptionDetailsModal')).hide();
+                    setTimeout(() => editPrescription(id), 300); // Small delay for smooth transition
+                };
+            }
             
             // Show the details modal
             new bootstrap.Modal(document.getElementById('prescriptionDetailsModal')).show();

@@ -266,25 +266,142 @@ class AuthManager {
     updateRoleBasedNavigation() {
         if (!this.user) return;
         
-        const isAdmin = this.user.role === 'admin';
+        const role = (this.user.role || '').toLowerCase();
         
-        if (!isAdmin && this.user.patient_id) {
-            const userRoleElements = document.querySelectorAll('.user-role');
-            userRoleElements.forEach(el => {
-                el.textContent = 'Limited Access User';
-            });
+        // Update user role and display name in navigation
+        const userRoleElements = document.querySelectorAll('.user-role');
+        userRoleElements.forEach(el => {
+            el.textContent = role === 'admin' ? 'System Administrator' : (role === 'doctor' ? 'Attending Physician' : 'Patient Portal');
+        });
+        
+        const userNameElements = document.querySelectorAll('.user-name');
+        userNameElements.forEach(el => {
+            const displayName = this.user.firstName ? `${this.user.firstName} ${this.user.lastName || ''}`.trim() : (this.user.username || 'User');
+            el.textContent = displayName;
+        });
+
+        // 1. PATIENT ROLE LEAST-PRIVILEGE UI FILTERING (HIPAA § 164.312(a)(1))
+        if (role === 'patient') {
+            // Patients must NEVER see internal clinical/administrative management options
+            const prohibitedLinks = [
+                'patients.html',
+                'institutions.html',
+                'doctors.html',
+                'diagnostic-studies.html',
+                'conditions.html',
+                'medications.html',
+                'users.html',
+                'audit-logs.html'
+            ];
             
-            const userNameElements = document.querySelectorAll('.user-name');
-            userNameElements.forEach(el => {
-                if (!el.querySelector('.access-note')) {
-                    const accessNote = document.createElement('small');
-                    accessNote.className = 'access-note d-block text-muted';
-                    accessNote.textContent = '(Patient-specific access)';
-                    el.appendChild(accessNote);
+            prohibitedLinks.forEach(page => {
+                document.querySelectorAll(`a.nav-link[href="${page}"], a.dropdown-item[href="${page}"]`).forEach(link => {
+                    const parentLi = link.closest('.nav-item') || link.closest('li');
+                    if (parentLi && !parentLi.classList.contains('dropdown')) {
+                        parentLi.style.display = 'none';
+                    } else {
+                        link.style.display = 'none';
+                    }
+                });
+            });
+
+            // Prevent direct URL navigation: redirect patients away from administrative directory pages
+            const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+            if (['patients.html', 'institutions.html', 'users.html', 'audit-logs.html'].includes(currentPath)) {
+                window.location.replace('index.html');
+                return;
+            }
+
+            // Hide clinical mutation buttons (patients consume records, they do not create them)
+            const addButtons = document.querySelectorAll('[data-bs-toggle="modal"][data-bs-target*="Modal"], .admin-action, .btn-primary:has(.bi-plus), .btn-primary:has(.bi-person-plus)');
+            addButtons.forEach(btn => {
+                // Keep password change or legitimate patient action buttons, hide clinical creation modals
+                if (btn.getAttribute('data-bs-target') !== '#changePasswordModal') {
+                    btn.style.display = 'none';
                 }
             });
         }
-        
+
+        // 2. DOCTOR ROLE LEAST-PRIVILEGE UI FILTERING
+        if (role === 'doctor') {
+            // Doctors cannot manage user accounts, audit logs, or hospital facilities
+            document.querySelectorAll('a.nav-link[href="users.html"], a.dropdown-item[href="users.html"], a.nav-link[href="institutions.html"], a.dropdown-item[href="audit-logs.html"], a.nav-link[href="audit-logs.html"]').forEach(link => {
+                const parentLi = link.closest('.nav-item') || link.closest('li');
+                if (parentLi) parentLi.style.display = 'none';
+            });
+
+            const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+            if (['users.html', 'audit-logs.html'].includes(currentPath)) {
+                window.location.replace('index.html');
+                return;
+            }
+        }
+
+        // Clean up orphaned "Settings" dropdown headers for non-admin roles
+        if (role !== 'admin') {
+            document.querySelectorAll('.dropdown-menu .dropdown-header').forEach(header => {
+                if (header.textContent.toLowerCase().includes('settings')) {
+                    const li = header.closest('li');
+                    if (li) li.style.display = 'none';
+                    const prevLi = li?.previousElementSibling;
+                    if (prevLi && prevLi.querySelector('.dropdown-divider')) {
+                        prevLi.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        // 3. INJECT "AI ASSISTANT" & "SECURITY AUDIT LOGS" NAV ITEMS DYNAMICALLY
+        const navbarNav = document.querySelector('.navbar-nav');
+        if (navbarNav && !document.querySelector('a.nav-link[href="ai-assistant.html"]')) {
+            const aiLink = document.createElement('a');
+            aiLink.className = `nav-link ${window.location.pathname.includes('ai-assistant.html') ? 'active' : ''}`;
+            aiLink.href = 'ai-assistant.html';
+            aiLink.innerHTML = '<i class="bi bi-robot text-primary me-1"></i>AI Assistant';
+            
+            const recordsDropdown = navbarNav.querySelector('.nav-item.dropdown');
+            if (recordsDropdown) {
+                recordsDropdown.before(aiLink);
+            } else {
+                navbarNav.appendChild(aiLink);
+            }
+        }
+
+        if (role === 'admin' && !document.querySelector('a.dropdown-item[href="audit-logs.html"]')) {
+            const userMgmtLink = document.querySelector('a[href="users.html"]');
+            if (userMgmtLink) {
+                const auditLi = document.createElement('li');
+                auditLi.innerHTML = `
+                    <a class="dropdown-item admin-only ${window.location.pathname.includes('audit-logs.html') ? 'active' : ''}" href="audit-logs.html">
+                        <i class="bi bi-shield-check me-2 text-primary"></i>Security Audit Logs
+                    </a>
+                `;
+                userMgmtLink.closest('li')?.after(auditLi);
+            }
+        }
+
+        // 4. PROMINENT DIRECT LOGOUT BUTTON IN NAVBAR FOR ALL USERS
+        const userDropdownEl = document.getElementById('userDropdown');
+        if (userDropdownEl && !document.getElementById('directLogoutBtn')) {
+            const userNavItem = userDropdownEl.closest('.nav-item') || userDropdownEl.parentElement;
+            const parentNav = userNavItem?.parentElement;
+            if (parentNav) {
+                const logoutNavItem = document.createElement('div');
+                logoutNavItem.className = 'nav-item ms-2 d-flex align-items-center';
+                logoutNavItem.innerHTML = `
+                    <button id="directLogoutBtn" class="btn btn-outline-danger btn-sm logout-btn py-1 px-2 d-flex align-items-center" title="Logout">
+                        <i class="bi bi-box-arrow-right me-1"></i>Logout
+                    </button>
+                `;
+                userNavItem.after(logoutNavItem);
+                logoutNavItem.querySelector('#directLogoutBtn').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.logout();
+                });
+            }
+        }
+
+
         this.updateActionButtons();
     }
     
@@ -292,14 +409,17 @@ class AuthManager {
         if (!this.user) return;
         
         const isAdmin = this.user.role === 'admin';
+        const isDoctorOrAdmin = this.user.role === 'admin' || this.user.role === 'doctor';
+        
+        // Hide "+ Add Patient" button from non-clinical patients
+        const addPatientBtn = document.querySelector('[data-bs-target="#patientModal"]');
+        if (addPatientBtn) {
+            addPatientBtn.style.display = isDoctorOrAdmin ? '' : 'none';
+        }
         
         const restrictedButtons = document.querySelectorAll('.admin-action');
         restrictedButtons.forEach(button => {
-            if (isAdmin) {
-                button.style.display = '';
-            } else {
-                button.style.display = 'none';
-            }
+            button.style.display = isAdmin ? '' : 'none';
         });
     }
 
@@ -321,7 +441,7 @@ class AuthManager {
         try {
             const response = await fetch(`${this.baseURL}${endpoint}`, config);
             
-            if (response.status === 401 || response.status === 403) {
+            if (response.status === 401) {
                 this.logout();
                 return null;
             }

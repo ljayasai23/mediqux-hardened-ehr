@@ -174,7 +174,7 @@ function filterPatients() {
             (patient.phone && patient.phone.includes(searchTerm)) ||
             (patient.email && patient.email.toLowerCase().includes(searchTerm));
         
-        const matchesGender = !genderFilter || patient.gender === genderFilter;
+        const matchesGender = !genderFilter || (patient.gender && patient.gender.toLowerCase() === genderFilter.toLowerCase());
         
         return matchesSearch && matchesGender;
     });

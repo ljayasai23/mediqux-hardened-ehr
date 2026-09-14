@@ -114,7 +114,8 @@ function displayUsers() {
         
         const roleBadge = user.role === 'admin' ? 
             '<span class="badge bg-primary">Admin</span>' : 
-            '<span class="badge bg-secondary">User</span>';
+            (user.role === 'doctor' ? '<span class="badge bg-success">Doctor</span>' : 
+            '<span class="badge bg-info text-dark">Patient / User</span>');
         
         return `
             <tr>
@@ -174,7 +175,7 @@ function togglePatientAccess() {
     const role = document.getElementById('role').value;
     const patientSection = document.getElementById('patientAccessSection');
     
-    if (role === 'admin') {
+    if (role === 'admin' || role === 'doctor') {
         patientSection.style.display = 'none';
         document.getElementById('patientId').value = '';
     } else {

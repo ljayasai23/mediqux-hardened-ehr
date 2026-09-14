@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database/db');
-const { addPatientFilter } = require('../middleware/auth');
+const { addPatientFilter, authorizePatientAccess, requireAdmin, requireDoctorOrAdmin } = require('../middleware/auth');
+const { auditMiddleware } = require('../middleware/audit');
+const { generateRecordHMAC } = require('../utils/integrity');
 
-// Get all patients (with RBAC filtering)
-router.get('/', addPatientFilter, async (req, res) => {
+// Get all patients (with RBAC filtering and HIPAA Audit Trail)
+router.get('/', addPatientFilter, auditMiddleware('LIST_PATIENTS', 'PATIENT_PHI'), async (req, res) => {
   try {
     let query = `
       SELECT 
@@ -15,6 +17,7 @@ router.get('/', addPatientFilter, async (req, res) => {
         gender, 
         phone, 
         email,
+        address,
         created_at
       FROM patients 
     `;
@@ -43,6 +46,15 @@ router.get('/', addPatientFilter, async (req, res) => {
       count: result.rows.length
     });
   } catch (error) {
+    if (global.STANDALONE_PATIENTS_DB && db.isPostgresOffline) {
+      let list = Object.values(global.STANDALONE_PATIENTS_DB);
+      if (req.patientFilter && req.patientFilter !== 'none') {
+        list = list.filter(p => String(p.id) === String(req.patientFilter));
+      } else if (req.patientFilter === 'none') {
+        list = [];
+      }
+      return res.json({ success: true, data: list, count: list.length });
+    }
     console.error('Error fetching patients:', error);
     res.status(500).json({
       success: false,
@@ -51,12 +63,14 @@ router.get('/', addPatientFilter, async (req, res) => {
   }
 });
 
-// Get single patient by ID
-router.get('/:id', async (req, res) => {
+// Get single patient by ID - Protected with Object-Level Authorization (IDOR Protection)
+router.get('/:id', authorizePatientAccess, auditMiddleware('READ_PATIENT_RECORD', 'PATIENT_PHI'), async (req, res) => {
   try {
     const { id } = req.params;
     const result = await db.query(`
-      SELECT * FROM patients WHERE id = $1
+      SELECT id, first_name, last_name, date_of_birth, gender, phone, email, address,
+             emergency_contact_name, emergency_contact_phone, created_at, updated_at
+      FROM patients WHERE id = $1
     `, [id]);
     
     if (result.rows.length === 0) {
@@ -66,11 +80,24 @@ router.get('/:id', async (req, res) => {
       });
     }
     
+    const patientData = result.rows[0];
+    
+    // Attach cryptographic integrity verification hash (HIPAA § 164.312(c)(1))
+    patientData.integrity_hash = generateRecordHMAC(patientData);
+
     res.json({
       success: true,
-      data: result.rows[0]
+      data: patientData
     });
   } catch (error) {
+    if (global.STANDALONE_PATIENTS_DB && global.STANDALONE_PATIENTS_DB[req.params.id]) {
+      const patientData = { ...global.STANDALONE_PATIENTS_DB[req.params.id] };
+      patientData.integrity_hash = generateRecordHMAC(patientData);
+      return res.json({
+        success: true,
+        data: patientData
+      });
+    }
     console.error('Error fetching patient:', error);
     res.status(500).json({
       success: false,
@@ -79,8 +106,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create new patient
-router.post('/', async (req, res) => {
+// Create new patient - Restricted to Doctors and Admins (HIPAA Least Privilege § 164.312(a)(1))
+router.post('/', requireDoctorOrAdmin, auditMiddleware('CREATE_PATIENT_RECORD', 'PATIENT_PHI'), async (req, res) => {
   try {
     const {
       first_name,
@@ -137,8 +164,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update patient
-router.put('/:id', async (req, res) => {
+// Update patient - Protected with Object-Level Authorization
+router.put('/:id', authorizePatientAccess, auditMiddleware('UPDATE_PATIENT_RECORD', 'PATIENT_PHI'), async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -193,8 +220,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete patient
-router.delete('/:id', async (req, res) => {
+// Delete patient - Restricted exclusively to Admins
+router.delete('/:id', requireAdmin, auditMiddleware('DELETE_PATIENT_RECORD', 'PATIENT_PHI'), async (req, res) => {
   try {
     const { id } = req.params;
     

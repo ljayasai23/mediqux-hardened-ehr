@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Clinical Assistant - Mediqux</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIGZpbGw9IiMwZDZlZmQiIHJ4PSI0Ii8+CiAgPHBhdGggZD0iTTE2IDI0Yy0yIDAtOC00LTgtMTAgMC0zIDIuNS01IDUtNSAxLjUgMCAyLjUgMC41IDMgMS41IDAuNS0xIDEuNS0xLjUgMy0xLjUgMi41IDAgNSAyIDUgNSAwIDYtNiAxMC04IDEweiIgZmlsbD0id2hpdGUiLz4KICA8cGF0aCBkPSJNOCAxNmgzbDItNCAyIDggMi00aDMiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMS41IiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link href="css/styles.css" rel="stylesheet">
+    
+    <!-- Theme Management -->
+    <script src="js/theme.js"></script>
+    <style>
+        .chat-container {
+            height: 480px;
+            overflow-y: auto;
+            border-radius: 12px;
+            background-color: var(--bs-card-bg, #fff);
+            border: 1px solid var(--bs-border-color, #dee2e6);
+            padding: 1.25rem;
+        }
+        .chat-bubble-user {
+            background-color: #0d6efd;
+            color: #ffffff;
+            border-radius: 16px 16px 4px 16px;
+            padding: 10px 16px;
+            max-width: 80%;
+            margin-left: auto;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .chat-bubble-ai {
+            background-color: var(--bs-tertiary-bg, #f8f9fa);
+            color: var(--bs-body-color, #212529);
+            border-radius: 16px 16px 16px 4px;
+            padding: 14px 18px;
+            max-width: 85%;
+            margin-right: auto;
+            margin-bottom: 12px;
+            border: 1px solid var(--bs-border-color, #dee2e6);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .chat-bubble-violation {
+            background-color: rgba(220, 53, 69, 0.12);
+            color: #ea868f;
+            border: 1px solid #dc3545;
+            border-left: 5px solid #dc3545;
+            border-radius: 8px;
+            padding: 14px 18px;
+            max-width: 90%;
+            margin-bottom: 12px;
+        }
+        .chat-bubble-blocked {
+            background-color: rgba(255, 193, 7, 0.12);
+            color: #ffda6a;
+            border: 1px solid #ffc107;
+            border-left: 5px solid #ffc107;
+            border-radius: 8px;
+            padding: 14px 18px;
+            max-width: 90%;
+            margin-bottom: 12px;
+        }
+        [data-bs-theme="dark"] .chat-bubble-ai {
+            background-color: #1e2227;
+            color: #e9ecef;
+            border-color: #373b3e;
+        }
+        [data-bs-theme="dark"] .chat-bubble-violation {
+            background-color: #2c1214;
+            color: #f87171;
+            border-color: #dc3545;
+        }
+        [data-bs-theme="dark"] .chat-bubble-blocked {
+            background-color: #2a2107;
+            color: #fbbf24;
+            border-color: #d97706;
+        }
+        .quick-chip {
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+        .quick-chip:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="index.html"><i class="bi bi-heart-pulse"></i> Mediqux</a>
+            
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="patients.html">Patients</a>
+                <a class="nav-link" href="institutions.html">Institutions</a>
+                <a class="nav-link" href="doctors.html">Doctors</a>
+                <a class="nav-link" href="appointments.html">Appointments</a>
+                <a class="nav-link" href="conditions.html">Conditions</a>
+                <a class="nav-link" href="medications.html">Medications</a>
+                <a class="nav-link" href="prescriptions.html">Prescriptions</a>
+                <a class="nav-link active" href="ai-assistant.html"><i class="bi bi-robot text-primary me-1"></i>AI Assistant</a>
+                
+                <!-- Records Dropdown -->
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Records</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="lab-reports.html"><i class="bi bi-file-earmark-medical me-2"></i>Lab Reports</a></li>
+                        <li><a class="dropdown-item" href="diagnostic-studies.html"><i class="bi bi-body-text me-2"></i>Diagnostic Studies</a></li>
+                    </ul>
+                </div>
+                
+                <!-- User Menu -->
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle me-1"></i>
+                        <span class="user-name">User</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><h6 class="dropdown-header">
+                            <span class="user-name">User</span><br>
+                            <small class="text-muted user-role">Role</small>
+                        </h6></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header text-uppercase small fw-bold text-muted">Settings</h6></li>
+                        <li><a class="dropdown-item admin-only" href="users.html">
+                            <i class="bi bi-people me-2"></i>User Management
+                        </a></li>
+                        <li><a class="dropdown-item admin-only" href="audit-logs.html">
+                            <i class="bi bi-shield-check me-2"></i>Security Audit Logs
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item logout-btn" href="#">
+                            <i class="bi bi-box-arrow-right me-2"></i>Logout
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4 mb-5">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h1 class="h3 mb-1"><i class="bi bi-robot text-primary me-2"></i>AI Clinical Triage & Patient Assistant</h1>
+                        <p class="text-muted mb-0">PRD § 13 Secure AI Gateway • OWASP Top 10 for LLMs • HIPAA Compliant</p>
+                    </div>
+                    <span class="badge bg-success-subtle text-success border border-success px-3 py-2">
+                        <i class="bi bi-shield-check me-1"></i>Guardrails Active
+                    </span>
+                </div>
+
+                <!-- Security Feature Banner -->
+                <div class="alert alert-light border shadow-sm py-2 px-3 mb-3 d-flex align-items-center justify-content-between">
+                    <small class="text-muted">
+                        <i class="bi bi-shield-shaded text-primary me-1"></i>
+                        <strong>Enforced Guardrails:</strong> Regex Adversarial Sanitization • Zero Database Privileges • Tenant-Isolated Tool Calls • Real-time Audit Logging
+                    </small>
+                    <small class="text-muted font-monospace" id="currentUserDisplay">Logged in: ...</small>
+                </div>
+
+                <!-- One-Click Security & Triage Test Chips -->
+                <div class="mb-3">
+                    <small class="text-muted fw-bold text-uppercase d-block mb-2">1-Click Demonstration Actions:</small>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button class="btn btn-sm btn-outline-danger quick-chip" id="btnTestJailbreak">
+                            <i class="bi bi-bug me-1"></i>Test Jailbreak (Prompt Injection)
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning quick-chip" id="btnTestToolIdor">
+                            <i class="bi bi-person-x me-1"></i>Test Tool IDOR (Query Patient 202)
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary quick-chip" id="btnTestMyMeds">
+                            <i class="bi bi-capsule me-1"></i>My Medications (Authorized Tool)
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger quick-chip" id="btnTestEmergency">
+                            <i class="bi bi-heart-pulse-fill me-1"></i>Emergency Chest Pain Triage
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary quick-chip" id="btnTestJointPain">
+                            <i class="bi bi-bandaid me-1"></i>Routine Knee Pain Triage
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chat Display Area -->
+                <div class="chat-container shadow-sm mb-3" id="chatWindow">
+                    <!-- Welcome Message -->
+                    <div class="chat-bubble-ai">
+                        <div class="d-flex align-items-center mb-1">
+                            <i class="bi bi-robot text-primary me-2"></i>
+                            <strong>Mediqux Clinical Assistant</strong>
+                            <small class="text-muted ms-auto">System</small>
+                        </div>
+                        <div>
+                            Hello! I am your HIPAA-compliant clinical triage and records assistant. 
+                            You can describe your symptoms for department recommendations or ask for your active prescriptions.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Field & Send Button -->
+                <form id="aiChatForm" class="d-flex gap-2">
+                    <input type="text" class="form-control form-control-lg" id="chatInput" placeholder="Type a clinical question or test security prompt..." autocomplete="off" required>
+                    <button class="btn btn-primary btn-lg px-4" type="submit" id="sendChatBtn">
+                        <i class="bi bi-send-fill me-1"></i>Send
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ai-assistant.js"></script>
+</body>
+</html>

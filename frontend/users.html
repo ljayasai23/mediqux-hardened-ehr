@@ -189,10 +189,11 @@
                                 <div class="mb-3">
                                     <label for="role" class="form-label">Role *</label>
                                     <select class="form-select" id="role" name="role" onchange="togglePatientAccess()">
-                                        <option value="user">User</option>
+                                        <option value="user">Patient / Portal User</option>
+                                        <option value="doctor">Doctor</option>
                                         <option value="admin">Admin</option>
                                     </select>
-                                    <div class="form-text">Admin: Full access, User: Limited access</div>
+                                    <div class="form-text">Admin: Full access, Doctor: Clinical care, User: Patient/Caregiver portal</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
