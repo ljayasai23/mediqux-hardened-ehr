@@ -24,9 +24,7 @@ jobs:
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
-          extra_args: --debug --only-verified
+          extra_args: --only-verified
 
   # Check 2: Static Application Security Testing (SAST) - Semgrep OWASP Top 10
   sast-scan:
